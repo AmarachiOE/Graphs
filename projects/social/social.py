@@ -99,6 +99,9 @@ class SocialGraph:
         q = Queue()
         path = [userID]
         q.enqueue(path)
+
+        path_lengths = [] # extra
+
         while q.size() > 0:
             # print("Current Queue: ", q.queue)
             path = q.dequeue()  # remove/return next path block in line
@@ -119,11 +122,22 @@ class SocialGraph:
                     visited[v] = path
 
                 for friend in self.friendships[v]:
+                    # make copy of path
                     new_path = list(path)  # or = path[:]
-                    new_path.append(friend)  # adding friend to path
-                    # adds path as a block [friend, friend, friend], so queue is a list of lists
+
+                    # append friend to path copy
+                    new_path.append(friend)
+                    
+                    # adds path as a block [friend, friend, friend] to queue, so queue is a list of lists
                     q.enqueue(new_path)
 
+                    # tracking path lengths to eventually find avg degrees of separation
+                    path_lengths.append(len(new_path)) # extra
+
+        avgDegreeSep = math.floor(sum(path_lengths)/len(path_lengths)) # extra
+
+        # print("Path Lengths: ", path_lengths)
+        # print("Avg. DoS: ", avgDegreeSep)
         return visited
 
 
