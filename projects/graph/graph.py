@@ -98,19 +98,20 @@ class Graph:
         # print("DFT: ", visited)
         return visited
 
-    def dft_recursive(self, starting_vertex, visited = None):
+    def dft_recursive(self, starting_vertex, visited = None): # must pass visited as arg so share among recursions and not reset each round
         """
         Print each vertex in depth-first order
         beginning from starting_vertex.
         This should be done using recursion.
         """
-        if visited is None:
+        if visited is None: # or use visited=[] as arg in place of this if statement
             visited = []
+
         visited.append(starting_vertex)
 
         for vertex in self.vertices[starting_vertex]:
             if vertex not in visited:
-                self.dft_recursive(vertex, visited)
+                self.dft_recursive(vertex, visited) # add visited as arg so we can share the same list of visited and not reset it to [] for each recursion
         
         # print("DFT Recursive: ", visited)
         return visited
@@ -121,21 +122,58 @@ class Graph:
         starting_vertex to destination_vertex in
         breath-first order.
         """
+        #### ORIGINAL TAKE
+        # q = Queue()
+        # q.enqueue(starting_vertex)
+        # visited = []
+        # while q.size() > 0:
+        #     v = q.dequeue()
+        #     if v not in visited:
+        #         visited.append(v)
+
+        #         for next_vert in self.vertices[v]:
+        #             if next_vert not in visited:
+        #                 q.enqueue(next_vert)
+        #             # q.enqueue(next_vert)
+        #             if next_vert == destination_vertex:
+        #                 visited.append(next_vert)
+        #                 return visited
+
+        # return visited
+
+        #### FROM CLASS
         q = Queue()
-        q.enqueue(starting_vertex)
+
+        q.enqueue([starting_vertex])
+
         visited = []
+
         while q.size() > 0:
-            v = q.dequeue()
+            path = q.dequeue() # path = returned first item in queue
+            v = path[-1] # current vert = last item in path
+
             if v not in visited:
+                if v == destination_vertex:
+                    return path
+
                 visited.append(v)
 
                 for next_vert in self.vertices[v]:
-                    q.enqueue(next_vert)
-                    if next_vert == destination_vertex:
-                        visited.append(next_vert)
-                        return visited
+                    """ 
+                    a = 5
+                    b = a
+                    a += 1
+                    print(a, b) --> 6, 5
+                    new_path is the same data as path, but we want an actual copy, not just point to the same reference, so we use list(path)
+                    since we want to explore different paths
 
-        return visited
+                    """
+                    new_path = list(path)
+                    new_path.append(next_vert)
+                    q.enqueue(new_path)
+           
+
+        return None
 
     def dfs(self, starting_vertex, destination_vertex):
         """
@@ -143,22 +181,47 @@ class Graph:
         starting_vertex to destination_vertex in
         depth-first order.
         """
+        #### ORIGINAL TAKE
+        # s = Stack()
+        # s.push(starting_vertex)
+        # visited = []
+
+        # while s.size() > 0:
+        #     v = s.pop()
+        #     if v not in visited:
+        #         visited.append(v)
+
+        #         for next_vert in self.vertices[v]:
+        #             s.push(next_vert)
+        #             if next_vert == destination_vertex:
+        #                 visited.append(next_vert)
+        #                 return visited
+
+        # return visited
+
+        #### FROM CLASS
         s = Stack()
-        s.push(starting_vertex)
+
+        s.push([starting_vertex])
+
         visited = []
 
         while s.size() > 0:
-            v = s.pop()
+            path = s.pop() # path = returned first item in queue
+            v = path[-1] # last item in path
+
             if v not in visited:
+                if v == destination_vertex:
+                    return path
                 visited.append(v)
 
                 for next_vert in self.vertices[v]:
-                    s.push(next_vert)
-                    if next_vert == destination_vertex:
-                        visited.append(next_vert)
-                        return visited
+                    new_path = list(path)
+                    new_path.append(next_vert)
+                    s.push(new_path)
+           
 
-        return visited
+        return None
 
 
 if __name__ == '__main__':
