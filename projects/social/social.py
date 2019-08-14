@@ -75,7 +75,7 @@ class SocialGraph:
             friendship = possibleFriendships[i]
             self.addFriendship(friendship[0], friendship[1])
 
-    def getAllSocialPaths(self, userID):
+    def getAllSocialPathsAE(self, userID):
         """
         Takes a user's userID as an argument
 
@@ -97,23 +97,23 @@ class SocialGraph:
         visited = {}  # Note that this is a dictionary, not a set
 
         q = Queue()
+        q.enqueue([userID])
         path = [userID]
-        q.enqueue(path)
 
         path_lengths = [] # extra
 
         while q.size() > 0:
             # print("Current Queue: ", q.queue)
-            path = q.dequeue()  # remove/return next path block in line
+            path = q.dequeue()  # remove/return next path block/chunk in line
 
             # Get last item in path block
             # This is the end friend
             # The path block holds the connections bw the starting user (userID) to this end friend
             # Path format ex:
             # [start, end] or
-            # [start, next,... next, end]
+            # [startUser, nextFriend,... nextFriend, endFriend]
             # So we want to add the end item/friend as a key in dictionary, with the full path block/array as the value
-            # in dict: for user to get to this item/friend/key: the path of user's friends
+            # in dict: for user to get to this item/friend/key: the path (path variable) of user's friends
             v = path[-1]
 
             if v not in visited:
@@ -125,19 +125,54 @@ class SocialGraph:
                     # make copy of path
                     new_path = list(path)  # or = path[:]
 
-                    # append friend to path copy
-                    new_path.append(friend)
-                    
-                    # adds path as a block [friend, friend, friend] to queue, so queue is a list of lists
-                    q.enqueue(new_path)
+                    if friend not in visited:
 
-                    # tracking path lengths to eventually find avg degrees of separation
-                    path_lengths.append(len(new_path)) # extra
+                        # append friend to path copy
+                        new_path.append(friend)
+                        
+                        # adds path as a block [friend, friend, friend] to queue, so queue is a list of lists
+                        q.enqueue(new_path)
+
+                        # tracking path lengths to eventually find avg degrees of separation
+                        path_lengths.append(len(new_path)) # extra
 
         avgDegreeSep = math.floor(sum(path_lengths)/len(path_lengths)) # extra
 
         # print("Path Lengths: ", path_lengths)
         # print("Avg. DoS: ", avgDegreeSep)
+        return visited
+
+    def getAllSocialPaths(self, userID):
+        """
+        Takes a user's userID as an argument
+
+        Returns a dictionary containing every user in that user's
+        extended network with the shortest friendship path between them.
+
+        The key is the friend's ID and the value is the path.
+        """
+        # CLASS SOLUTION - Pretty much BFS
+        # TODO:
+
+        if not self.friendships[userID]:
+            return "User has no friends"
+
+        visited = {}  # Note that this is a dictionary, not a set
+
+        q = Queue()
+        q.enqueue([userID])
+
+        while q.size() > 0:
+            path = q.dequeue()
+            newUserID = path[-1]
+            if newUserID not in visited:
+                visited[newUserID] = path
+                for friendID in self.friendships[newUserID]:
+                    if friendID not in visited:
+                        new_path = list(path)
+                        new_path.append(friendID)
+                        q.enqueue(new_path)
+
         return visited
 
 
@@ -146,7 +181,9 @@ if __name__ == '__main__':
     sg.populateGraph(10, 2)
     print("Friendships: ", sg.friendships)
     connections = sg.getAllSocialPaths(1)
+    connectionsAE = sg.getAllSocialPathsAE(1)
     print("Connections: ", connections)
+    print("ConnectionsAE: ", connectionsAE)
 
 """ In Command Line: 
 $ cd into social folder
