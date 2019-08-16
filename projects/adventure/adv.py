@@ -43,7 +43,7 @@ player = Player("Name", world.startingRoom)
 ###################### START ##############
 
 # Fill this out
-traversalPath = [] # is visited
+traversalPath = []
 
 # create empty graph dict
 graph = {}
@@ -65,7 +65,7 @@ for key in roomGraph:
         graph[key][value] = '?'
 
 
-# Get Opposite Direction For Found Room
+# Get Opposite Direction To Record in goBack Path
 def oppositeDir(dir):
     if dir == 'n':
         return 's'
@@ -76,8 +76,8 @@ def oppositeDir(dir):
     if dir == 'e':
         return 'w'
 
-# Visited keeps track for the rooms and their connections that we've explored
-visited = {}
+# Explored keeps track for the rooms and their connections/exits that we've explored
+explored = {}
 
 # Record the moves you've made to keep track
 goBack = []
@@ -85,37 +85,40 @@ goBack = []
 # start with player's current room
 currentRoom = player.currentRoom.id
 
- 
-while len(visited) != len(graph): 
+# while not all rooms have been explored
+# if a room was explored, it would be added to explored dictionary
+while len(explored) != len(graph): 
 
     print("Start room ", currentRoom)
 
-    # if room and directions not in visited, copy info from graph dict into visited dict
-    # but it's okay to iterate through room's we've already visited
-    if currentRoom not in visited:
-        visited[currentRoom] = graph[currentRoom]
+    # if room and directions not in explored, copy info from graph dict into explored dict
+    # but it's okay to iterate through room's we've already explored
+    if currentRoom not in explored:
+        explored[currentRoom] = graph[currentRoom]
 
-    # collect list of unexplored move options of roomId
+    # collect list of unexplored (has "?") move options of roomId
     moveOptions = []
     for dir in graph[currentRoom]:
         if graph[currentRoom][dir] == '?':
             moveOptions.append(dir)
 
     # Handle Dead Ends
+    # moveOptions are empty (no explored exits) but can reverse direction (goBack has length)
+    # needs to be after step where moveOptions are collected
     # description below
     while len(moveOptions) == 0 and len(goBack) > 0:
-        movedBack = goBack.pop()
+        movedBack = goBack.pop() # the last move made
         traversalPath.append(movedBack)
         print("Dead end. Gotta reverse!")
         player.travel(movedBack)
         currentRoom = player.currentRoom.id
         print(f"I'm now at room {currentRoom}, and can back {len(goBack)} more rooms.")
 
-        back_moveOptions = []
+        back_moveOptions = [] # any unexplored exits in this room we went back to??
         for dir in graph[currentRoom]:
             if graph[currentRoom][dir] == '?':
                 back_moveOptions.append(dir)
-        moveOptions = back_moveOptions
+        moveOptions = back_moveOptions # if still empty, while loop repeats, if not empty, move on through code
         
 
     # Handle Dead Ends and Can't Go Back
@@ -123,9 +126,9 @@ while len(visited) != len(graph):
         break
 
     
-    # choose last item in moveOptions as next move
-    # reset moveOptions
-    nextMove = moveOptions[-1]
+    # choose first item in moveOptions as next move
+    # reset moveOptions to get prepare for next room
+    nextMove = moveOptions[0]
     moveOptions = []
 
     # Record the backwards version of move and append to goBack array
@@ -144,28 +147,30 @@ while len(visited) != len(graph):
         nextRoomId = player.currentRoom.w_to.id 
     
 
-    print(f"I'm moving {nextMove} to room {nextRoomId}")
+    print(f"I'm in room {currentRoom} moving {nextMove} to room {nextRoomId}")
 
     # Check:
     # print("Current and Next ", currentRoom, nextRoomId)
 
-    # set both rooms as values for direction and opp direction of the other room 
+    # set next room id as value for current room at chosen direction 
+    # set current room as value for next room at opposite chosen direction
     graph[currentRoom][nextMove] = nextRoomId
     graph[nextRoomId][backwardsMove] = currentRoom
     
     # Check:
-    # print("NextRoomId ", graph[currentRoom][nextMove])
+    # print("NextRoomId ", graph[currentRoom][nextMove], nextRoomId)
 
-    # update currentRoom record in visited dict
-    visited[currentRoom] = graph[currentRoom]
+    # update currentRoom record in explored dict
+    # not necessary but oh well
+    explored[currentRoom] = graph[currentRoom]
 
     # Check:
     # print("Updated Graph ", graph, len(graph))
-    # print("Updated Visited ", visited, len(visited))
+    # print("Updated explored ", explored, len(explored))
 
     # append next move to traversalPath
     # move to next room
-    # set currentRoom as the new player currentRoom id (after traveled)
+    # set currentRoom as the new player currentRoom id (after traveled) to repeat while loop for next room
     traversalPath.append(nextMove)
     player.travel(nextMove)
     currentRoom = player.currentRoom.id
@@ -178,11 +183,12 @@ print("Traversed Path ", traversalPath)
 # while there's no where to explore in this room, and we can go back (goBack has len)
 # remember, goBack array already tracking OPPOSITE direction
 # go back to the last room (oppositeDir(last item in path array))
-# append to traversalPath
+# append to traversalPath to record accurate path taken!!!
 # move in that direction player.travel(backwards move)
 # find unexplored exits in new room (append to new exit list)
 # update moveOptions to = new exit options
-# while loop repeats until exit is found
+# while loop repeats until exit is found (moveOptions > 0)
+# however, if no moveOptions never found and can't go back anymore goBack (len = 0), then break... we're done
 
 
 ######################## END ##################
@@ -206,9 +212,9 @@ else:
 
 
 
-#######
+######
 # UNCOMMENT TO WALK AROUND
-#######
+######
 # player.currentRoom.printRoomDescription(player)
 # while True:
 #     cmds = input("-> ").lower().split(" ")
